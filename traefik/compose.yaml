@@ -1,0 +1,47 @@
+# docker-compose.yml
+services:
+  traefik:
+    image: traefik:v3.7
+    container_name: traefik-1
+    ports:
+      - "80:80"
+      - "443:443"
+      - "222:222"
+    networks:
+      - frontend
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./config/traefik.yaml:/etc/traefik/traefik.yaml:ro
+      - ./letsencrypt:/letsencrypt
+    labels:
+      # Enable Traefik on this container
+      - "traefik.enable=true"
+      
+      # Router for HTTPS access to the dashboard
+      - "traefik.http.routers.traefik.rule=Host(`traefik.akor.dev`)"  # Use a subdomain for the dashboard
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.tls=true"
+      - "traefik.http.routers.traefik.tls.certresolver=le"
+
+      - "traefik.http.middlewares.test-auth.basicauth.users=korandnik:$$apr1$$Bkb38rUX$$5C6fo1jD0jonedqRcXmgv0"
+      - "traefik.http.routers.traefik.middlewares=test-auth"
+    restart: unless-stopped
+
+  whoami:
+    networks:
+      - frontend
+    image: "traefik/whoami"
+    container_name: "whoami"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`whoami.akor.dev`)"
+      - "traefik.http.routers.whoami.entrypoints=websecure"
+      - "traefik.http.routers.whoami.tls.certresolver=le"
+    restart: unless-stopped
+
+networks:
+  frontend:
+    external: true
+
+

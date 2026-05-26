@@ -1,0 +1,41 @@
+services:
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:15
+    container_name: forgejo
+    environment:
+      - USER_UID=1001
+      - USER_GID=1003
+      - FORGEJO__database__DB_TYPE=mysql
+      - FORGEJO__database__HOST=mariadb:3306
+      - FORGEJO__database__NAME=forgejodb
+      - FORGEJO__database__USER=forgejo
+      - FORGEJO__database__PASSWD=${FORGEJO_DB_PASSWD}
+    restart: always
+    networks:
+      - mariadb
+      - frontend
+    volumes:
+      - ./forgejo:/data
+      - /etc/localtime:/etc/localtime:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.forgejo.rule=Host(`git.akor.dev`)"
+      - "traefik.http.routers.forgejo.entrypoints=websecure"
+      - "traefik.http.routers.forgejo.tls=true"
+      - "traefik.http.routers.forgejo.tls.certresolver=le"
+      - "traefik.http.services.forgejo.loadbalancer.server.port=3000"
+      - "traefik.tcp.routers.forgejo-ssh.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.forgejo-ssh.entrypoints=ssh"
+      - "traefik.tcp.services.forgejo-ssh.loadbalancer.server.port=22"
+    # ports:
+    #   - "3000:3000"
+    #   - "222:22"
+    # depends_on:
+    #   - mariadb
+
+networks:
+  frontend:
+    external: true
+  mariadb:
+    external: true
+

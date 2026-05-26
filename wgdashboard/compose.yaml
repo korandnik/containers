@@ -1,0 +1,26 @@
+services:
+  wgdashboard:
+    image: ghcr.io/wgdashboard/wgdashboard:latest
+    restart: unless-stopped
+    container_name: wgdashboard
+    ports:
+      - 51820:51820/udp
+    volumes:
+      - /etc/wireguard:/etc/wireguard  # Mount host's WG config (read-only for safety)
+      - ./data:/data  # Dashboard data
+    networks:
+      - frontend
+    labels: 
+      - "traefik.enable=true"
+      - "traefik.http.routers.wireguard.rule=Host(`wireguard.akor.dev`)"
+      - "traefik.http.routers.wireguard.entrypoints=websecure"
+      - "traefik.http.routers.wireguard.tls.certresolver=le"
+    environment:
+      - WG_CONF_DIR=/etc/wireguard
+    cap_add:
+      - NET_ADMIN  # Still needed to read interface status
+
+networks:
+  frontend:    
+    external: true
+

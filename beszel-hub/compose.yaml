@@ -1,0 +1,31 @@
+services:
+  beszel:
+    image: henrygd/beszel
+    container_name: beszel
+    restart: unless-stopped
+    # ports:
+    #   - "8090:8090"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.beszel-hub.rule=Host(`beszel.akor.dev`)"
+      - "traefik.http.routers.beszel-hub.entrypoints=websecure"
+      - "traefik.http.routers.beszel-hub.tls.certresolver=le"
+      - "traefik.http.services.beszel-hub.loadbalancer.server.port=8090"  # CRITICAL: Tell Traefik which port
+    networks:
+      - frontend
+    environment:
+      - APP_URL=https://beszel.akor.dev
+    volumes:
+      - ./beszel_data:/beszel_data
+      - ./beszel_socket:/beszel_socket
+    # healthcheck:
+    #   test: ['CMD', '/beszel', 'health', '--url', 'https://beszel.akor.dev']
+    #   interval: 600s
+    #   start_period: 10s
+    #   timeout: 5s
+
+
+networks:
+  frontend:
+    external: true
+

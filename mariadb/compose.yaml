@@ -1,0 +1,23 @@
+services:
+  mariadb:
+    image: mariadb:11
+    container_name: mariadb
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${PASSWD}
+    volumes:
+      - ./mariadb_data:/var/lib/mysql
+    networks:
+      - mariadb
+    # healthcheck:
+    #   test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
+    labels:
+      - "traefik.enable=false"
+
+networks:
+  mariadb:
+    external: true
+
